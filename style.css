@@ -85,13 +85,12 @@ header {
     text-transform: capitalize;
 }
 
-.nav-menu ul li button {
-    border: none;
-    outline: none;
-    padding: 10px 30px;
+.btn {
+    padding: 5px 20px !important;
     border-radius: 30px;
     font-weight: bold;
-    color: #1f4a40;
+    color: #1f4a40 !important;
+    background-color: #fff;
     cursor: pointer;
 }
 
@@ -187,6 +186,7 @@ header {
     width: 100%;
     height: 100vh;
     transition: all .3s ease-in;
+    display: none;
 }
 
 #modal {
@@ -235,4 +235,7 @@ header {
     font-weight: 500;
     color: #1f4a40;
 
+}
+.no-matching-jobs {
+    color: red;
 }

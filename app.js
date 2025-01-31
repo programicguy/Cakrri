@@ -1,147 +1,123 @@
-// Create jobs array
-const jobs = [];
+// Initialize jobs array with existing data from localStorage
+const jobs = JSON.parse(localStorage.getItem("Jobs")) || [];
 
-// Create a form data object
-const formData = {};
+// Function to get form data and validate it
+function getFormData() {
+  const company = document.querySelector("#company").value.trim();
+  const title = document.querySelector("#job").value.trim();
+  const salary = document.querySelector("#salary").value.trim();
+  const availability = document.querySelector("#availability").value.trim();
 
-function getFormData(validateFormData) {
-  const company = document.querySelector("#company").value;
-  const title = document.querySelector("#job").value;
-  const salary = document.querySelector("#salary").value;
-  const availability = document.querySelector("#availability").value;
-
-  return validateFormData(company, title, salary, availability);
+  return validateFormData({ company, title, salary, availability });
 }
 
-// Flag for form validation success
-function validateFormData(company, title, salary, availability) {
+// Validate form data and return the job object if valid
+function validateFormData({ company, title, salary, availability }) {
+  const fields = {
+    Company: company,
+    Title: title,
+    Salary: salary,
+    Availability: availability,
+  };
   let isValid = true;
 
-  if (company.toLowerCase() === "") {
-    createError("Company", "can't be empty.");
-    isValid = false;
-    setTimeout(() => {
-      removeError();
-    }, 3000);
-  }
-  if (title.toLowerCase() === "") {
-    createError("Title", "can't be empty.");
-    isValid = false;
-    setTimeout(() => {
-      removeError();
-    }, 3000);
-  }
-  if (salary.toLowerCase() === "") {
-    createError("Salary", "can't be empty.");
-    isValid = false;
-    setTimeout(() => {
-      removeError();
-    }, 3000);
-  }
-  if (availability.toLowerCase() === "") {
-    createError("Availability", "can't be empty.");
-    isValid = false;
-    setTimeout(() => {
-      removeError();
-    }, 3000);
-  }
+  Object.entries(fields).forEach(([key, value]) => {
+    if (!value) {
+      createError(key, "can't be empty.");
+      isValid = false;
+    }
+  });
 
-  if (isValid) {
-    formData.id = jobs.length + 1;
-    formData.company = company;
-    formData.title = title;
-    formData.salary = salary;
-    formData.availability = availability;
-    return true;
-  } else {
-    // Return false if validation failed
-    return false;
-  }
+  return isValid
+    ? { id: jobs.length + 1, company, title, salary, availability }
+    : null;
 }
 
-// Create an error message
-function createError(errorName, message) {
-  const div = document.createElement("div");
-  div.innerHTML = `<p class="error-msg"><span class="error-text">${errorName}</span> ${message}</p>`;
+// Function to create an error message
+function createError(field, message) {
+  removeError(); // Clear existing error before showing a new one
+  const errorMsg = document.createElement("p");
+  errorMsg.classList.add("error-msg");
+  errorMsg.innerHTML = `<span class="error-text">${field}</span> ${message}`;
 
-  const jobFormHeader = document.querySelector(".job-form-header");
-  jobFormHeader.appendChild(div);
+  document.querySelector(".job-form-header").appendChild(errorMsg);
+  setTimeout(removeError, 3000);
 }
 
 // Remove the last error message
 function removeError() {
   const errorMessage = document.querySelector(".error-msg");
-  if (errorMessage) {
-    errorMessage.remove();
-  }
+  if (errorMessage) errorMessage.remove();
 }
 
-// Store data to the localStorage
-function storeJobsLocalStorage(jobs) {
+// Store jobs in localStorage
+function storeJobsLocalStorage() {
   localStorage.setItem("Jobs", JSON.stringify(jobs));
 }
 
-// Push exsting the data to the array
-function pushExstingData() {
-  if (localStorage.length !== 0) {
-    const data = localStorage.getItem("Jobs");
-    jobs.push(JSON.parse(data));
-  }
+// Function to display success modal and close it on click
+function showSuccessModal() {
+  const modal = document.querySelector(".job-success-modal");
+  modal.style.display = "block";
+  modal.onclick = () => (modal.style.display = "none");
 }
-pushExstingData();
 
-// Job success message
-function jobSuccessMes() {
-  const jobSuccessModal = document.querySelector(".job-success-modal");
-
-  document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("job-success-modal")) {
-      jobSuccessModal.style.display = "none";
-    }
-  });
-}
-jobSuccessMes();
-// Handdle form submition
-const form = document.getElementById("job-form");
-
+// Handle form submission
 document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("job-form");
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const res = getFormData(validateFormData);
-    if (!res) {
-      return;
-    }
-    console.log(jobs);
-    const jobSuccessModal = document.querySelector(".job-success-modal");
-    jobSuccessModal.style.display = "block";
-    form.reset();
 
-    if (Object.keys(formData).length !== 0) {
-      jobs.push(formData);
-      storeJobsLocalStorage(jobs);
-    }
+    const newJob = getFormData();
+    if (!newJob) return;
+
+    jobs.push(newJob);
+    storeJobsLocalStorage();
+    showSuccessModal();
+    form.reset();
+    showJobs(); // Refresh job listings
   });
 });
 
-// Show the jobs from localStorage
-function showJobs() {
-  jobs.forEach((job) => {
-    job.forEach((j) => {
-      const jobContainer = document.getElementById("jobs");
-      const div = document.createElement("div");
-      div.classList.add("jobs");
-      div.innerHTML = `
-  <div class="jobs">
-    <ul>
-        <li class="company">${j.company}</li>
-        <li class="title">${j.title}</li>
-        <li>$${j.salary}k/Yearly</li>
-       <li class="availability">${j.availability}</li>
-    </ul>
-  </div>`;
+showJobs()
 
-      jobContainer.appendChild(div);
-    });
+// Function to display jobs based on search input
+function showJobs(searchTerm = "") {
+  const jobContainer = document.getElementById("jobs");
+  jobContainer.innerHTML = ""; 
+
+  // Filter jobs based on search term
+  const filteredJobs = jobs.filter((job) => 
+    job.company.toLowerCase().includes(searchTerm) ||
+    job.title.toLowerCase().includes(searchTerm) ||
+    job.availability.toLowerCase().includes(searchTerm)
+  );
+
+  if (filteredJobs.length === 0) {
+    jobContainer.innerHTML = `<p class="no-matching-jobs">No matching jobs found</p>`;
+    return;
+  }
+
+  // Render filtered jobs
+  filteredJobs.forEach((job) => {
+    const div = document.createElement("div");
+    div.classList.add("jobs");
+    div.innerHTML = `
+      <div class="jobs">
+        <ul>
+          <li class="company">${job.company}</li>
+          <li class="title">${job.title}</li>
+          <li>$${job.salary}k/Yearly</li>
+          <li class="availability">${job.availability}</li>
+        </ul>
+      </div>`;
+    jobContainer.appendChild(div);
   });
 }
-showJobs();
+
+// Event listener for live search
+document.getElementById("search").addEventListener("keyup", (e) => {
+  const searchTerm = e.target.value.trim().toLowerCase();
+  showJobs(searchTerm);
+});
