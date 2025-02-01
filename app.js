@@ -66,32 +66,36 @@ function showSuccessModal() {
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("job-form");
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
 
-    const newJob = getFormData();
-    if (!newJob) return;
+      const newJob = getFormData();
+      if (!newJob) return;
 
-    jobs.push(newJob);
-    storeJobsLocalStorage();
-    showSuccessModal();
-    form.reset();
-    showJobs(); // Refresh job listings
-  });
+      jobs.push(newJob);
+      storeJobsLocalStorage();
+      showSuccessModal();
+      form.reset();
+      showJobs(); // Refresh job listings
+    });
+  }
 });
 
-showJobs()
+showJobs();
 
 // Function to display jobs based on search input
 function showJobs(searchTerm = "") {
   const jobContainer = document.getElementById("jobs");
-  jobContainer.innerHTML = ""; 
+  if (!jobContainer) return;
+  jobContainer.innerHTML = "";
 
   // Filter jobs based on search term
-  const filteredJobs = jobs.filter((job) => 
-    job.company.toLowerCase().includes(searchTerm) ||
-    job.title.toLowerCase().includes(searchTerm) ||
-    job.availability.toLowerCase().includes(searchTerm)
+  const filteredJobs = jobs.filter(
+    (job) =>
+      job.company.toLowerCase().includes(searchTerm) ||
+      job.title.toLowerCase().includes(searchTerm) ||
+      job.availability.toLowerCase().includes(searchTerm)
   );
 
   if (filteredJobs.length === 0) {
@@ -117,7 +121,33 @@ function showJobs(searchTerm = "") {
 }
 
 // Event listener for live search
-document.getElementById("search").addEventListener("keyup", (e) => {
-  const searchTerm = e.target.value.trim().toLowerCase();
-  showJobs(searchTerm);
+const search = document.getElementById("search");
+if (search) {
+  search.addEventListener("keyup", (e) => {
+    const searchTerm = e.target.value.trim().toLowerCase();
+    showJobs(searchTerm);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Select elements
+  const hambargar = document.querySelector(".hambargar");
+  const navMenu = document.querySelector(".nav-menu ul");
+
+  // If these elements exist, execute the menu toggle logic
+  if (hambargar && navMenu) {
+    hambargar.addEventListener("click", () => {
+      if (navMenu.classList.contains("active")) {
+        navMenu.classList.remove("active");
+        hambargar.innerHTML = "&#9776;"; // ☰ (menu icon)
+      } else {
+        navMenu.classList.add("active");
+        hambargar.innerHTML = "&#10006;"; // ✖ (close icon)
+      }
+    });
+  } else {
+    console.warn(
+      "Hambargar menu not found on this page, skipping event listener."
+    );
+  }
 });
